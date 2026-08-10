@@ -96,6 +96,17 @@ _CI_REVIEW_FILES = {
 }
 _CI_REVIEW_PATHS = (".github/workflows/", ".github/actions/")
 
+# Flatpak/Snapcraft packaging: changes here trigger their dedicated build lanes.
+_FLATPAK_PATHS = (
+    "apps/desktop/flatpak/",
+    "apps/desktop/scripts/stage-flatpak.mjs",
+    "hermes_cli/flatpak_desktop.py",
+)
+_SNAPCRAFT_PATHS = (
+    "apps/desktop/snap/",
+    "apps/desktop/scripts/stage-snap.mjs",
+)
+
 # Supply-chain scan: files that can execute code at install/import time.
 _SCAN_EXTS = (".py", ".pth")
 _SCAN_FILES = {"setup.cfg", "pyproject.toml"}
@@ -208,6 +219,8 @@ def classify(files: list[str]) -> dict[str, bool]:
         "rust": any(_is_rust(f) for f in files),
         "mcp_catalog": any(_is_mcp_catalog(f) for f in files),
         "ci_review": any(_is_ci_review(f) for f in files),
+        "flatpak": any(f.startswith(_FLATPAK_PATHS) for f in files),
+        "snapcraft": any(f.startswith(_SNAPCRAFT_PATHS) for f in files),
         "nix": python_prod or frontend or any(_is_nix(f) for f in files)
     }
     if not files or any(f.startswith(".github/") for f in files):
