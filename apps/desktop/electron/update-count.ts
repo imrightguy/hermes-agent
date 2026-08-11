@@ -4,16 +4,18 @@
 // common commit. A merge can expose ancestry that the local shallow boundary
 // hides from HEAD, inflating the count with old commits. Exact counts are only
 // trustworthy in full clones; shallow checkouts use presence-only status plus
-// any positively proven local-ahead ancestry.
-function shouldCountCommits({ isShallow }) {
+// any positively proven local-ahead ancestry. ``hasMergeBase`` is accepted for
+// call-site compatibility but the shallow rule alone decides — a visible
+// merge-base in a shallow graph still can't be trusted for exact counts.
+function shouldCountCommits({ isShallow, hasMergeBase }: { isShallow: boolean; hasMergeBase?: boolean }) {
   return !isShallow
 }
 
 // Resolve how many commits the local checkout is behind origin for the desktop
 // update indicator. Shallow checkouts use SHA equality plus any positively
 // proven local-ahead ancestry; exact counts remain exclusive to full clones.
-function resolveBehindCount({ countStr, currentSha, targetSha, isShallow, targetIsAncestorOfHead = false }) {
-  if (!shouldCountCommits({ isShallow })) {
+function resolveBehindCount({ countStr, currentSha, targetSha, isShallow, targetIsAncestorOfHead = false, hasMergeBase = false }) {
+  if (!shouldCountCommits({ isShallow, hasMergeBase })) {
     if (currentSha && targetSha && (currentSha === targetSha || targetIsAncestorOfHead)) {
       return 0
     }
