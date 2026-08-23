@@ -101,11 +101,17 @@ jobs:
         # to publish to GitHub Releases itself (we upload via the release job)
         run: npm run dist:linux -- --publish never
 
+      - name: Install FUSE (AppImage runtime)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libfuse2
+
       - name: Verify artifacts
         run: |
+          test -f apps/desktop/release/*.AppImage || { echo 'FATAL: no AppImage produced'; exit 1; }
           ls -la apps/desktop/release/*.AppImage
           chmod +x apps/desktop/release/*.AppImage
-          apps/desktop/release/*.AppImage --help | head -5 || true
+          # Smoke-run the AppImage; a FUSE/sandbox hiccup here must not fail the
+          # release — existence + executability are the contract.
+          apps/desktop/release/*.AppImage --help | head -5 || echo '(smoke run skipped)'
           test -f apps/desktop/release/*.deb
           test -f apps/desktop/release/*.rpm
 
