@@ -60,4 +60,14 @@ def build_gui_parser(subparsers, *, cmd_gui: Callable) -> None:
         action="store_true",
         help="Force a full rebuild even if the content stamp matches",
     )
+    gui_parser.add_argument(
+        "--flatpak",
+        action="store_true",
+        help="Linux: install/launch the official Flathub Flatpak client instead of the local build",
+    )
+    gui_parser.add_argument(
+        "--snapd",
+        action="store_true",
+        help="Linux: build and launch the Hermes Desktop snap from this workspace (optional; CI only ships the AppImage)",
+    )
     gui_parser.set_defaults(func=cmd_gui)

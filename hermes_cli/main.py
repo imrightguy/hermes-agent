@@ -7811,25 +7811,47 @@ def _register_linux_desktop_entry() -> None:
 def cmd_gui(args: argparse.Namespace):
     """Launch Hermes Desktop.
 
-    Linux production installs use the official Flathub Flatpak.  The native
-    Hermes CLI, gateway, and ``~/.hermes`` state remain outside that package.
-    ``--source`` retains the local Electron developer workflow.
+    Default (Linux): build/launch the local AppImage-style Electron app.
+    ``--flatpak`` installs and launches the official Flathub Flatpak client.
+    ``--snapd`` builds and launches the snap from this workspace. Flatpak and
+    Snap are optional local flows — CI only builds the AppImage. The native
+    Hermes CLI, gateway, and ``~/.hermes`` state always stay outside any
+    packaged client.
     """
-    if sys.platform.startswith("linux") and not getattr(args, "source", False):
-        from hermes_cli.flatpak_desktop import ensure_installed, launch_with_native_backend
-
-        if getattr(args, "build_only", False):
-            sys.exit(0 if ensure_installed() else 1)
-
-        # The Flatpak is Electron-only. Start the normal native CLI backend and
-        # pass its loopback URL/token to the sandboxed client; it never executes
-        # or updates a second Hermes runtime inside /app.
-        sys.exit(
-            launch_with_native_backend(
-                [sys.executable, "-m", "hermes_cli.main"],
-                cwd=getattr(args, "cwd", None) or os.getcwd(),
-            )
+    if sys.platform.startswith("linux"):
+        from hermes_cli.flatpak_desktop import (
+            ensure_installed as _flatpak_ensure_installed,
         )
+        from hermes_cli.flatpak_desktop import (
+            launch_with_native_backend as _flatpak_launch,
+        )
+
+        if getattr(args, "flatpak", False) and not getattr(args, "source", False):
+            if getattr(args, "build_only", False):
+                sys.exit(0 if _flatpak_ensure_installed() else 1)
+
+            # The Flatpak is Electron-only. Start the normal native CLI backend
+            # and pass its loopback URL/token to the sandboxed client; it never
+            # executes or updates a second Hermes runtime inside /app.
+            sys.exit(
+                _flatpak_launch(
+                    [sys.executable, "-m", "hermes_cli.main"],
+                    cwd=getattr(args, "cwd", None) or os.getcwd(),
+                )
+            )
+
+        if getattr(args, "snapd", False) and not getattr(args, "source", False):
+            from hermes_cli.snap_desktop import build_snap, install_snap, launch_with_native_backend as _snap_launch
+
+            snap_path = build_snap(PROJECT_ROOT)
+            if snap_path is None or not install_snap(snap_path):
+                sys.exit(1)
+            sys.exit(
+                _snap_launch(
+                    [sys.executable, "-m", "hermes_cli.main"],
+                    cwd=getattr(args, "cwd", None) or os.getcwd(),
+                )
+            )
 
     desktop_dir = PROJECT_ROOT / "apps" / "desktop"
     if not (desktop_dir / "package.json").exists():
