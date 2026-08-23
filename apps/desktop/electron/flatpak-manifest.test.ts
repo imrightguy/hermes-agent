@@ -6,15 +6,9 @@ import { describe, expect, test } from 'vitest'
 
 const desktopRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
-const manifest = readFileSync(
-  path.join(desktopRoot, 'flatpak', 'com.nousresearch.Hermes.yml'),
-  'utf8',
-)
+const manifest = readFileSync(path.join(desktopRoot, 'flatpak', 'com.nousresearch.Hermes.yml'), 'utf8')
 
-const metainfo = readFileSync(
-  path.join(desktopRoot, 'flatpak', 'com.nousresearch.Hermes.metainfo.xml'),
-  'utf8',
-)
+const metainfo = readFileSync(path.join(desktopRoot, 'flatpak', 'com.nousresearch.Hermes.metainfo.xml'), 'utf8')
 
 const desktopPackage = JSON.parse(readFileSync(path.join(desktopRoot, 'package.json'), 'utf8'))
 const projectToml = readFileSync(path.join(desktopRoot, '..', '..', 'pyproject.toml'), 'utf8')
@@ -48,8 +42,8 @@ describe('Flatpak sandbox permissions', () => {
         '--filesystem=host',
         '--talk-name=org.freedesktop.Notifications',
         '--talk-name=org.freedesktop.portal.Desktop',
-        '--talk-name=org.freedesktop.portal.FileChooser',
-      ]),
+        '--talk-name=org.freedesktop.portal.FileChooser'
+      ])
     )
     expect(finishArgs).not.toContain('--filesystem=home')
     expect(finishArgs).not.toContain('--filesystem=home:ro')

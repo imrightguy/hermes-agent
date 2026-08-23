@@ -14,7 +14,14 @@ function shouldCountCommits({ isShallow, hasMergeBase }: { isShallow: boolean; h
 // Resolve how many commits the local checkout is behind origin for the desktop
 // update indicator. Shallow checkouts use SHA equality plus any positively
 // proven local-ahead ancestry; exact counts remain exclusive to full clones.
-function resolveBehindCount({ countStr, currentSha, targetSha, isShallow, targetIsAncestorOfHead = false, hasMergeBase = false }) {
+function resolveBehindCount({
+  countStr,
+  currentSha,
+  targetSha,
+  isShallow,
+  targetIsAncestorOfHead = false,
+  hasMergeBase = false
+}) {
   if (!shouldCountCommits({ isShallow, hasMergeBase })) {
     if (currentSha && targetSha && (currentSha === targetSha || targetIsAncestorOfHead)) {
       return 0
