@@ -36,8 +36,6 @@ DEFAULT = {
     "npm_lock": True,
     "installer": True,
     "rust": True,
-    "flatpak": True,
-    "snapcraft": True,
     "mcp_catalog": False,
     "ci_review": True,
 }
@@ -59,8 +57,6 @@ def _lanes(
     python_prod=None,
     nix=None,
     docker=None,
-    flatpak=None,
-    snapcraft=None,
 ) -> dict[str, bool]:
     # python_prod tracks python except for tests-only diffs; default it to
     # python so the majority of cases don't need to spell it out.
@@ -75,8 +71,6 @@ def _lanes(
         "python_prod": _python_prod,
         "docker": (docker_meta or _product) if docker is None else docker,
         "nix": _product if nix is None else nix,
-        "flatpak": _product if flatpak is None else flatpak,
-        "snapcraft": _product if snapcraft is None else snapcraft,
         "frontend": frontend,
         "docker_meta": docker_meta,
         "site": site,

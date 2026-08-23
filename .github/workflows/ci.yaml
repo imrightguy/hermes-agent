@@ -55,8 +55,6 @@ jobs:
       mcp_catalog: ${{ steps.classify.outputs.mcp_catalog }}
       ci_review: ${{ steps.classify.outputs.ci_review }}
       ci_review_files: ${{ steps.classify.outputs.ci_review_files }}
-      flatpak: ${{ steps.classify.outputs.flatpak }}
-      snapcraft: ${{ steps.classify.outputs.snapcraft }}
       event_name: ${{ github.event_name }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -170,18 +168,6 @@ jobs:
     needs: detect
     if: needs.detect.outputs.docker_meta == 'true'
     uses: ./.github/workflows/docker-lint.yml
-
-  flatpak-build:
-    name: Validate Flatpak Build
-    needs: detect
-    if: needs.detect.outputs.flatpak == 'true' || needs.detect.outputs.frontend == 'true'
-    uses: ./.github/workflows/flatpak-build.yml
-
-  snapcraft-build:
-    name: Validate Snapcraft Build
-    needs: detect
-    if: needs.detect.outputs.snapcraft == 'true' || needs.detect.outputs.frontend == 'true'
-    uses: ./.github/workflows/snapcraft-build.yml
 
   docker:
     name: Build&Test Docker image

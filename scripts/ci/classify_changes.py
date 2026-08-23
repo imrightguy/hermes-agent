@@ -222,15 +222,8 @@ def classify(files: list[str]) -> dict[str, bool]:
         "rust": any(_is_rust(f) for f in files),
         "mcp_catalog": any(_is_mcp_catalog(f) for f in files),
         "ci_review": any(_is_ci_review(f) for f in files),
-        # Product lanes ride on python_prod/frontend like docker/nix (ci.yaml
-        # gates them with `flatpak == 'true' || frontend == 'true'`), plus
-        # direct touches to their packaging files.
-        "flatpak": any(f.startswith(_FLATPAK_PATHS) for f in files)
-        or python_prod
-        or frontend,
-        "snapcraft": any(f.startswith(_SNAPCRAFT_PATHS) for f in files)
-        or python_prod
-        or frontend,
+        "flatpak": any(f.startswith(_FLATPAK_PATHS) for f in files),
+        "snapcraft": any(f.startswith(_SNAPCRAFT_PATHS) for f in files),
         "nix": python_prod or frontend or any(_is_nix(f) for f in files),
     }
     if not files or any(f.startswith(".github/") for f in files):
@@ -247,8 +240,6 @@ def classify(files: list[str]) -> dict[str, bool]:
         ret["installer"] = True
         ret["rust"] = True
         ret["nix"] = True
-        ret["flatpak"] = True
-        ret["snapcraft"] = True
         ret["ci_review"] = True
 
         # explicitly skip mcp catalog here. it's not needed unless those files are modified.
