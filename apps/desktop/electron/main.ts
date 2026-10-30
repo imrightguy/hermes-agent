@@ -3468,15 +3468,15 @@ function emitUpdateProgress(payload) {
 }
 
 async function checkUpdates(opts: { force?: boolean } = {}): Promise<UpdaterStatusWire> {
-  const packaged = resolvePackageUpdate(process.env)
+  const packageManager = resolvePackageUpdate(process.env)
 
-  if (packaged) {
+  if (packageManager) {
     return {
       supported: false,
       mechanism: 'external',
-      reason: packaged.reason,
-      message: `${packaged.message} ${packaged.command}`,
-      command: packaged.command,
+      reason: packageManager.reason,
+      message: `${packageManager.message} ${packageManager.command}`,
+      command: packageManager.command,
       fetchedAt: Date.now()
     }
   }
@@ -4416,15 +4416,15 @@ async function applyUpdates(): Promise<UpdaterApplyResultWire> {
     let handedOff: boolean = false
 
     try {
-      const packaged = resolvePackageUpdate(process.env)
+      const packageManager = resolvePackageUpdate(process.env)
 
-      if (packaged) {
+      if (packageManager) {
         return {
           ok: true,
           manual: true,
           mechanism: 'external',
-          command: packaged.command,
-          message: packaged.message
+          command: packageManager.command,
+          message: packageManager.message
         }
       }
 
