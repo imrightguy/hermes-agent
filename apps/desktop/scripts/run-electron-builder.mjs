@@ -76,6 +76,10 @@ function toolsetArguments(inputs) {
   const config = require(path.join(app, 'electron-builder.config.cjs'))
   const tools = path.join(app, config.directories?.buildResources || 'build', 'prepared-packaging-tools')
   fs.mkdirSync(tools, { recursive: true })
+  // apps/desktop/package.json is "type": "module". electron-builder's copied
+  // icon tool is CommonJS .js; without this, Node loads it as ESM and the
+  // AppImage icon step dies with "require is not defined".
+  fs.writeFileSync(path.join(tools, 'package.json'), '{"type":"commonjs"}\n')
   return Object.entries(inputs.toolsets).map(([name, directory]) => {
     const destination = path.join(tools, name)
     fs.rmSync(destination, { recursive: true, force: true })
