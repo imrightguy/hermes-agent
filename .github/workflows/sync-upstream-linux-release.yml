@@ -205,14 +205,14 @@ jobs:
           set -euo pipefail
           cd apps/desktop/release
           ls -lh
-          test -f "Hermes-${VERSION}-linux-x64.AppImage"
-          test -f "Hermes-${VERSION}-linux-x64.deb"
-          test -f "Hermes-${VERSION}-linux-x64.rpm"
+          test -f "Hermes-${VERSION}-linux-x86_64.AppImage"
+          test -f "Hermes-${VERSION}-linux-amd64.deb"
+          test -f "Hermes-${VERSION}-linux-x86_64.rpm"
           test -d linux-unpacked
           test -e linux-unpacked/Hermes
-          chmod +x "Hermes-${VERSION}-linux-x64.AppImage"
-          dpkg-deb -I "Hermes-${VERSION}-linux-x64.deb" | head -n 20
-          rpm -qp "Hermes-${VERSION}-linux-x64.rpm"
+          chmod +x "Hermes-${VERSION}-linux-x86_64.AppImage"
+          dpkg-deb -I "Hermes-${VERSION}-linux-amd64.deb" | head -n 20
+          rpm -qp "Hermes-${VERSION}-linux-x86_64.rpm"
 
       - name: Upload native packages
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -290,8 +290,8 @@ jobs:
           flatpak-builder --user --disable-rofiles-fuse --force-clean \
             --repo=flatpak/repo flatpak/build-dir flatpak/com.nousresearch.Hermes.yml
           mkdir -p release
-          flatpak build-bundle flatpak/repo "release/Hermes-${VERSION}-linux-x64.flatpak" com.nousresearch.Hermes
-          test -s "release/Hermes-${VERSION}-linux-x64.flatpak"
+          flatpak build-bundle flatpak/repo "release/Hermes-${VERSION}-linux-x86_64.flatpak" com.nousresearch.Hermes
+          test -s "release/Hermes-${VERSION}-linux-x86_64.flatpak"
 
       - name: Upload Flatpak
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -387,10 +387,10 @@ jobs:
           mkdir -p dist
           find artifacts -type f \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.flatpak' -o -name '*.snap' \) -exec cp -t dist {} +
           ls -lh dist
-          test -f "dist/Hermes-${VERSION}-linux-x64.AppImage"
-          test -f "dist/Hermes-${VERSION}-linux-x64.deb"
-          test -f "dist/Hermes-${VERSION}-linux-x64.rpm"
-          test -f "dist/Hermes-${VERSION}-linux-x64.flatpak"
+          test -f "dist/Hermes-${VERSION}-linux-x86_64.AppImage"
+          test -f "dist/Hermes-${VERSION}-linux-amd64.deb"
+          test -f "dist/Hermes-${VERSION}-linux-x86_64.rpm"
+          test -f "dist/Hermes-${VERSION}-linux-x86_64.flatpak"
           compgen -G 'dist/*.snap' >/dev/null
           chmod +x dist/*.AppImage
           python3 scripts/releases/upstream_linux_sync.py notes --tag "$TAG" --sha "$SHA" > notes.md

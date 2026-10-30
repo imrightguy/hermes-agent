@@ -90,10 +90,10 @@ def release_notes(tag: str, sha: str) -> str:
     return (
         f"Linux desktop packages for Hermes Agent {tag} (x86_64).\n\n"
         f"Built from NousResearch/hermes-agent@{tag} plus this fork's desktop packaging on `{sha}`.\n\n"
-        f"- `Hermes-{version}-linux-x64.AppImage` — `chmod +x` and run\n"
-        f"- `Hermes-{version}-linux-x64.deb` — `sudo apt install ./Hermes-{version}-linux-x64.deb`\n"
-        f"- `Hermes-{version}-linux-x64.rpm` — `sudo dnf install ./Hermes-{version}-linux-x64.rpm`\n"
-        f"- `Hermes-{version}-linux-x64.flatpak` — `flatpak install --user ./*.flatpak`\n"
+        f"- `Hermes-{version}-linux-x86_64.AppImage` — `chmod +x` and run\n"
+        f"- `Hermes-{version}-linux-amd64.deb` — `sudo apt install ./Hermes-{version}-linux-amd64.deb`\n"
+        f"- `Hermes-{version}-linux-x86_64.rpm` — `sudo dnf install ./Hermes-{version}-linux-x86_64.rpm`\n"
+        f"- `Hermes-{version}-linux-x86_64.flatpak` — `flatpak install --user ./*.flatpak`\n"
         "- Snap — `sudo snap install --dangerous --devmode ./hermes-desktop_*.snap`\n\n"
         f"Upstream release: https://github.com/NousResearch/hermes-agent/releases/tag/{tag}\n"
     )

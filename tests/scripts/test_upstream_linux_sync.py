@@ -53,7 +53,8 @@ def test_plan_accepts_historical_calver_release_tags():
 def test_release_notes_name_the_tag_and_commit():
     notes = release_notes("v0.22.5", "a" * 40)
     assert "Hermes Agent v0.22.5" in notes
-    assert "Hermes-0.22.5-linux-x64.AppImage" in notes
+    assert "Hermes-0.22.5-linux-x86_64.AppImage" in notes
+    assert "Hermes-0.22.5-linux-amd64.deb" in notes
     assert "a" * 40 in notes
 
 
