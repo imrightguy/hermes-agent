@@ -18,8 +18,12 @@ function run(command, args) {
 rmSync(stageRoot, { recursive: true, force: true })
 mkdirSync(stageRoot, { recursive: true })
 
-run('npm', ['run', 'build'])
-run('npm', ['run', 'builder', '--', '--linux', '--dir'])
+const unpackedReady = process.env.HERMES_DESKTOP_UNPACKED_READY === '1' && existsSync(unpackedDesktop)
+
+if (!unpackedReady) {
+  run('npm', ['run', 'build'])
+  run('npm', ['run', 'builder', '--', '--linux', '--x64', '--dir'])
+}
 
 if (!existsSync(unpackedDesktop)) {
   throw new Error(`electron-builder did not create ${unpackedDesktop}`)

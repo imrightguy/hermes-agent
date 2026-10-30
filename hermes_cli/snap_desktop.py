@@ -80,8 +80,9 @@ def install_snap(snap_path: Path) -> bool:
         return False
 
     print(f"Installing local snap: {snap_path}")
-    # The snap is unsigned, so it needs --dangerous; confinement is devmode.
-    result = _run([snap, "install", "--dangerous", "--classic", str(snap_path)])
+    # Unsigned devmode snap: --dangerous accepts the local build, --devmode
+    # matches confinement in snap/snapcraft.yaml.
+    result = _run([snap, "install", "--dangerous", "--devmode", str(snap_path)])
     if result.returncode:
         print("Local snap install failed.")
         return False
