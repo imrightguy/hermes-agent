@@ -5,6 +5,7 @@ export interface PackageUpdateInstruction {
   kind: 'flatpak' | 'snap'
   command: string
   message: string
+  reason: string
 }
 
 export function resolvePackageUpdate(env: Record<string, string | undefined>): PackageUpdateInstruction | null {
@@ -12,7 +13,8 @@ export function resolvePackageUpdate(env: Record<string, string | undefined>): P
     return {
       kind: 'flatpak',
       command: `flatpak update --user ${FLATPAK_APP_ID}`,
-      message: 'This Flatpak is updated through Flatpak.'
+      message: 'This Flatpak is updated through Flatpak.',
+      reason: 'flatpak-managed'
     }
   }
 
@@ -20,7 +22,8 @@ export function resolvePackageUpdate(env: Record<string, string | undefined>): P
     return {
       kind: 'snap',
       command: `sudo snap refresh ${SNAP_NAME}`,
-      message: 'This Snap is updated through Snap.'
+      message: 'This Snap is updated through Snap.',
+      reason: 'snap-managed'
     }
   }
 

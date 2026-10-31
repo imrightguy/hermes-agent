@@ -20,6 +20,6 @@
   <url type="homepage">https://github.com/NousResearch/hermes-agent</url>
   <url type="bugtracker">https://github.com/NousResearch/hermes-agent/issues</url>
   <releases>
-    <release version="0.21.0" date="2026-08-31"/>
+    <release version="0.0.0" date="2026-08-31"/>
   </releases>
 </component>

@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
+import argparse
 import json
-import os
 import subprocess
 import sys
-from types import SimpleNamespace
 
-# Add the parent directory to the path so we can import hermes_cli
-sys.path.insert(0, "/run/media/rightguy/data/dev/projects/hermes-agent")
+import pytest
 
 from hermes_cli import flatpak_desktop
+from hermes_cli import main_desktop
+from hermes_cli import snap_desktop
 
 
 def _completed(command, returncode=0, **kwargs):
@@ -125,3 +125,44 @@ def test_start_native_backend_uses_ephemeral_loopback_port_and_ready_file(monkey
     assert kwargs["cwd"] == str(tmp_path)
     assert kwargs["env"]["HERMES_DASHBOARD_SESSION_TOKEN"] == token
     assert "HERMES_DESKTOP_READY_FILE" in kwargs["env"]
+
+
+def test_desktop_snapd_builds_and_launches_without_the_local_pack(monkeypatch, tmp_path):
+    monkeypatch.setattr(main_desktop.sys, "platform", "linux")
+    monkeypatch.setattr(main_desktop, "_project_root", lambda: tmp_path)
+    snap_file = tmp_path / "hermes-desktop.snap"
+    snap_file.write_bytes(b"fake")
+    built = []
+    installed = []
+    launched = []
+
+    monkeypatch.setattr(snap_desktop, "build_snap", lambda root: built.append(root) or snap_file)
+    monkeypatch.setattr(snap_desktop, "install_snap", lambda path: installed.append(path) or True)
+    monkeypatch.setattr(
+        snap_desktop,
+        "launch_with_native_backend",
+        lambda command, *, cwd: launched.append((command, cwd)) or 0,
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        main_desktop.cmd_gui(argparse.Namespace(source=False, snapd=True, flatpak=False, cwd=str(tmp_path)))
+
+    assert exc.value.code == 0
+    assert built == [tmp_path]
+    assert installed == [snap_file]
+    assert launched == [([sys.executable, "-m", "hermes_cli.main"], str(tmp_path))]
+
+
+def test_snap_install_uses_devmode_for_the_local_unsigned_build(monkeypatch, tmp_path):
+    commands = []
+    monkeypatch.setattr(snap_desktop, "_snap", lambda: "/usr/bin/snap")
+    monkeypatch.setattr(
+        snap_desktop,
+        "_run",
+        lambda command, **kwargs: commands.append(command) or subprocess.CompletedProcess(command, 0),
+    )
+    snap_path = tmp_path / "hermes-desktop.snap"
+    snap_path.write_bytes(b"fake")
+
+    assert snap_desktop.install_snap(snap_path) is True
+    assert commands == [["/usr/bin/snap", "install", "--dangerous", "--devmode", str(snap_path)]]
