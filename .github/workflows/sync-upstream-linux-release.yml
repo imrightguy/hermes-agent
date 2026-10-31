@@ -14,8 +14,10 @@ name: Sync upstream Linux release
 # GITHUB_TOKEN can create the Release and conflict issues, but it cannot push
 # a merge that changes files under .github/workflows. Upstream merges do that
 # on almost every release, so the secret is required for the scheduled sync.
-# A run that is already merged (no new commit) can build and publish with
-# GITHUB_TOKEN alone.
+# After the merge, every file under .github/workflows/ except this one is
+# deleted and committed before push and build. Conflicts limited to those
+# files are resolved by deleting them. Any other conflict still opens an
+# issue and does not publish.
 
 on:
   schedule:
@@ -117,23 +119,73 @@ jobs:
           set -e
           echo "$RESULT"
           if [ "$CODE" -eq 2 ]; then
-            TITLE="Upstream packaging sync conflict: ${TAG}"
-            echo "$RESULT" | python3 -c 'import json,sys; print("\n".join(json.load(sys.stdin)["conflicts"]))' \
-              | python3 scripts/releases/upstream_linux_sync.py issue-body --tag "$TAG" > /tmp/conflict-body.md
-            EXISTING="$(gh issue list --state open --limit 50 --json number,title \
-              --jq ".[] | select(.title==\"${TITLE}\") | .number")"
-            if [ -z "$EXISTING" ]; then
-              gh issue create --title "$TITLE" --body-file /tmp/conflict-body.md
-            else
-              echo "Conflict issue #${EXISTING} is already open."
+            mapfile -t CONFLICTS < <(printf '%s\n' "$RESULT" | python3 -c 'import json,sys; print("\n".join(json.load(sys.stdin)["conflicts"]))')
+            OTHER=0
+            if [ "${#CONFLICTS[@]}" -eq 0 ]; then
+              OTHER=1
             fi
-            echo "Merge conflict. Refusing to publish ${TAG}."
-            exit 1
-          fi
-          if [ "$CODE" -ne 0 ]; then
+            for conflict in "${CONFLICTS[@]}"; do
+              [ -z "$conflict" ] && continue
+              case "$conflict" in
+                .github/workflows/*) ;;
+                *) OTHER=1 ;;
+              esac
+            done
+            if [ "$OTHER" -ne 0 ]; then
+              TITLE="Upstream packaging sync conflict: ${TAG}"
+              printf '%s\n' "${CONFLICTS[@]}" \
+                | python3 scripts/releases/upstream_linux_sync.py issue-body --tag "$TAG" > /tmp/conflict-body.md
+              EXISTING="$(gh issue list --state open --limit 50 --json number,title \
+                --jq ".[] | select(.title==\"${TITLE}\") | .number")"
+              if [ -z "$EXISTING" ]; then
+                gh issue create --title "$TITLE" --body-file /tmp/conflict-body.md
+              else
+                echo "Conflict issue #${EXISTING} is already open."
+              fi
+              echo "Merge conflict outside .github/workflows. Refusing to publish ${TAG}."
+              exit 1
+            fi
+            # The helper aborted. Repeat the merge and drop the workflow files.
+            git merge --no-ff -m "merge upstream ${TAG} into Linux packaging" "$TAG" || true
+            if [ -f .git/MERGE_HEAD ]; then
+              while IFS= read -r conflict; do
+                [ -z "$conflict" ] && continue
+                case "$conflict" in
+                  .github/workflows/sync-upstream-linux-release.yml)
+                    git checkout --ours -- "$conflict"
+                    git add -- "$conflict"
+                    ;;
+                  .github/workflows/*)
+                    git rm -f -- "$conflict"
+                    ;;
+                  *)
+                    echo "::error::Unexpected conflict outside .github/workflows: $conflict"
+                    exit 1
+                    ;;
+                esac
+              done < <(git diff --name-only --diff-filter=U)
+              if [ -n "$(git diff --name-only --diff-filter=U)" ]; then
+                echo "::error::Workflow conflicts were not fully resolved."
+                exit 1
+              fi
+              git commit -m "merge upstream ${TAG} into Linux packaging"
+            fi
+          elif [ "$CODE" -ne 0 ]; then
             exit "$CODE"
           fi
-          SHA="$(echo "$RESULT" | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')"
+          # Upstream workflows come back with every tag merge. Keep only this fork's workflow.
+          removed=0
+          while IFS= read -r workflow; do
+            [ -z "$workflow" ] && continue
+            if [ "$workflow" != ".github/workflows/sync-upstream-linux-release.yml" ]; then
+              git rm -f -- "$workflow"
+              removed=1
+            fi
+          done < <(git ls-files '.github/workflows')
+          if [ "$removed" -eq 1 ]; then
+            git commit -m "ci: drop upstream GitHub workflows after sync"
+          fi
+          SHA="$(git rev-parse HEAD)"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           if [ "$PUSH" != "true" ]; then
             echo "Push disabled. Building ${SHA} without updating ${PACKAGING_REF}."
